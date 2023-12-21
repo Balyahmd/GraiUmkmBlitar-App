@@ -8,24 +8,59 @@ use App\Models\product;
 class HomeController extends Controller
 {
     /**
-     * Create a new controller instance.
-     *
-     * @return void
+     * Display a listing of the resource.
      */
-    public function __construct()
+    public function index()
     {
-        // this->middleware('auth');$
+        $product = product::paginate(6);
+        return view('beranda', compact('product'));
     }
 
     /**
-     * Show the application dashboard.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * Show the form for creating a new resource.
      */
-    public function show()
+    public function create()
     {
-        $datas = product::all();
+        //
+    }
 
-        return view('product', compact('datas'));
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
     }
 }

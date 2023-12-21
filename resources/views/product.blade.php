@@ -2,8 +2,7 @@
 
 @section('content')
 <div class="product">
-    <div id="navbar"></div>
-    <div class="header text-center p-5 bg-color-secondary">
+    <div class="head text-center p-5 bg-color-secondary">
     <h1 class="fw-semibold my-4 container">Produk Gerai UKM Blitar</h1>
     @include('component.FormSearch')
 </div>
