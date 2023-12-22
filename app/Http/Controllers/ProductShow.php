@@ -7,6 +7,7 @@ use App\Models\product;
 use Illuminate\Support\Facades\DB;
 use PhpParser\Node\Expr\AssignOp\Concat;
 use App\Providers\BooyerMoreProvider;
+use BooyerMoore;
 
 class ProductShow extends Controller
 {
@@ -67,36 +68,39 @@ class ProductShow extends Controller
         //
     }
 
-    public function boyerMoore($text, $pattern)
+    public function BooyerMore($text, $pattern)
     {
-        $textLength = strlen($text);
-        $patternLength = strlen($pattern);
-        $lastChar = [];
+        $n = strlen($text);
+        $m = strlen($pattern);
+        $last = array();
 
-        // ... (preprocessing - generate bad character heuristic)
-
-        $i = 0;
-        while ($i <= $textLength - $patternLength) {
-            $j = $patternLength - 1;
-
-            while ($j >= 0 && $pattern[$j] == $text[$i + $j]) {
-                $j--;
-            }
-
-            if ($j < 0) {
-                return $i; // Match found, return the position
-            } else {
-                for ($i = 0; $i < $patternLength; $i++) {
-                    $lastChar[ord($pattern[$i])] = $i;
-                }
-                // Mismatch: adjust indices using bad character heuristic and good suffix rule
-                $charIndex = ord($text[$i + $j]);
-                // $shift = max(1, $j - $lastChar[$charIndex]);
-                $shift = isset($lastChar[$charIndex]) ? max(1, $j - $lastChar[$charIndex]) : $j + 1;
-                $i += $shift;
-            }
-            dd($i);
+        // Initialize last occurrence array
+        for ($i = 0; $i < 256; $i++) {
+            $last[$i] = -1;
         }
+
+        // Fill last occurrence array with positions of characters in pattern
+        for ($i = 0; $i < $m; $i++) {
+            $last[ord($pattern[$i])] = $i;
+        }
+
+        $i = $m - 1; // Index for the end of the pattern
+        $j = $m - 1; // Index for the end of the text
+
+        while ($i < $n) {
+            if ($text[$j] == $pattern[$i]) {
+                // Match found
+                if ($i == 0) {
+                    return $j; // Return the position of the match
+                }
+                $i--;
+                $j--;
+            } else {
+                // No match, shift based on the last occurrence of the character in pattern
+                $i = $m - 1;
+                $j += $m - min($i, 1 + $last[ord($text[$j])]);
+            }
+        };
 
         return -1; // No match found
     }
@@ -104,49 +108,52 @@ class ProductShow extends Controller
 
     // public function search(Request $request)
     // {
+    //     $product = product::all();
+    //     $text = strtolower($product);
+
+    //     $pat = $request->query('search');
+    //     $pattern = strtolower($pat);
+
+    //     // $value = $this->SearchString($txt, $pattern);
+
     //     if ($request->has('search')) {
-    //         $products = Product::all();
-    //         $foundProducts = [];
-
-    //         foreach ($products as $product) {
-    //             $result = $this->boyerMoore(strtolower($product->nama_product), strtolower($request->search));
-
-    //             if ($result !== -1) {
-    //                 $foundProducts[] = $product;
-    //             }
-    //         }
-    //         return view('product', ['product' => $foundProducts]);
-    //     } else {
-    //         $product = Product::all();
-    //         return view('product', ['product' => $product]);
+    //         $product = product::where('nama_product', 'LIKE', '%' . $pattern . '%')->get();
+    //         $value = $this->BooyerMore($text, $pattern);
+    //         dd($value);
+    //         // $product = $this->BooyerMore($teks, $request->search);
     //     }
+    //     return view('product', ['product' => $product]);
     // }
 
     public function search(Request $request)
     {
-        // Retrieve all products from the database
-        $products = Product::all();
+        if ($request->has('search') && $request->search !== '') {
+            $pattern = explode(' ', strtolower($request->search));
+            $allProducts = Product::all();
+            $foundProducts = [];
 
-        // Extract product names from the objects in $products
-        $productNames = $products->pluck('nama_product')->toArray();
+            foreach ($allProducts as $product) {
+                $productName = strtolower($product->nama_product);
+                $matches = false;
 
-        // Perform the Boyer-Moore search on the extracted product names
-        $product = $this->boyerMoore($productNames, $request->search);
+                foreach ($pattern as $term) {
+                    $index = BooyerMoreProvider::search($productName, $term);
 
-        // Pass the search result to the view
-        return view('product', ['product' => $product]);
+                    if ($index !== -1) {
+                        $matches = true;
+                        break; // Break the loop when any term is found
+                    }
+                }
+
+                if ($matches) {
+                    $foundProducts[] = $product;
+                }
+            }
+
+            return view('product', ['product' => $foundProducts]);
+        } else {
+            $products = Product::all();
+            return view('product', ['product' => $products]);
+        }
     }
-
-
-    // public function search(Request $request)
-    // {
-    //     if ($request->has('search')) {
-    //         // $teks = product::all();
-    //         $product = product::where('nama_product', 'LIKE', '%' . $request->search . '%')->get();
-    //         // $product = $this->BooyerMore($teks, $request->search);
-    //     } else {
-    //         $product = product::all();
-    //     }
-    //     return view('product', ['product' => $product]);
-    // }
 }

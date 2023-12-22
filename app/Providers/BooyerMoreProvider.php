@@ -6,43 +6,44 @@ use Illuminate\Support\ServiceProvider;
 
 class BooyerMoreProvider extends ServiceProvider
 {
-
-    public function BooyerMore($text, $pattern)
+    public static function badCharacterHeuristic($pattern, $size, &$badChar)
     {
-        $n = strlen($text);
-        $m = strlen($pattern);
-        $last = array();
+        $badChar = array_fill(0, 256, -1);
 
-        // Initialize last occurrence array
-        for ($i = 0; $i < 256; $i++) {
-            $last[$i] = -1;
+        for ($i = 0; $i < $size; $i++) {
+            $badChar[ord($pattern[$i])] = $i;
         }
+    }
 
-        // Fill last occurrence array with positions of characters in pattern
-        for ($i = 0; $i < $m; $i++) {
-            $last[ord($pattern[$i])] = $i;
-        }
+    public static function search($text, $pattern)
+    {
+        $text = strtolower($text);
+        $pattern = strtolower($pattern);
 
-        $i = $m - 1; // Index for the end of the pattern
-        $j = $m - 1; // Index for the end of the text
+        $textLength = strlen($text);
+        $patternLength = strlen($pattern);
+        $badChar = [];
 
-        while ($i < $n) {
-            if ($text[$j] == $pattern[$i]) {
-                // Match found
-                if ($i == 0) {
-                    return $j; // Return the position of the match
-                }
-                $i--;
+        self::badCharacterHeuristic($pattern, $patternLength, $badChar);
+
+        $shift = 0;
+        while ($shift <= $textLength - $patternLength) {
+            $j = $patternLength - 1;
+
+            while ($j >= 0 && $pattern[$j] == $text[$shift + $j]) {
                 $j--;
+            }
+
+            if ($j < 0) {
+                // Match found
+                return $shift;
             } else {
-                // No match, shift based on the last occurrence of the character in pattern
-                $i = $m - 1;
-                $j += $m - min($i, 1 + $last[ord($text[$j])]);
+                $shift += max(1, $j - $badChar[ord($text[$shift + $j])]);
             }
         }
 
-        return -1; // No match found
-
+        // No match found
+        return -1;
     }
 
     /**
@@ -50,6 +51,5 @@ class BooyerMoreProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
     }
 }
