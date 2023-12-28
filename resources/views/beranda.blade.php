@@ -15,7 +15,7 @@
           Blitar dapatkan disini
         </p>
         <div>
-          <a href="{{'#product-spesial'}}">
+          <a href="{{'#product-spesial'}}" class="text-decoration-none">
             <button class="btn btn-secondary">Order now</button>
           </a>
           <button class="btn btn-success">More menu</button>
@@ -138,7 +138,12 @@
 
 <div class="product-spesial" id="product-spesial">
   <div class="container">
-    <h3 class="my-4 fw-semibold">Special menu for you</h3>
+    <div class="my-4 d-flex justify-content-between ">
+      <h3 class="fw-semibold">Special menu for you</h3>
+      <a href="/product" class="fw-semibold text-decoration-none text-black">
+          <h5 class="fw-semibold">Lihat Semua ></h5>
+      </a>
+    </div>
     <div
       id="product-container"
       class="row row-cols-2 row-cols-lg-3 g-3 g-lg-5">

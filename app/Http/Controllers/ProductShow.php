@@ -41,7 +41,9 @@ class ProductShow extends Controller
      */
     public function show(string $id)
     {
-        //
+        // $productList = product::paginate(3);
+        $product = product::find($id);
+        return view('details', compact('product'));
     }
 
     /**
@@ -68,67 +70,12 @@ class ProductShow extends Controller
         //
     }
 
-    public function BooyerMore($text, $pattern)
-    {
-        $n = strlen($text);
-        $m = strlen($pattern);
-        $last = array();
-
-        // Initialize last occurrence array
-        for ($i = 0; $i < 256; $i++) {
-            $last[$i] = -1;
-        }
-
-        // Fill last occurrence array with positions of characters in pattern
-        for ($i = 0; $i < $m; $i++) {
-            $last[ord($pattern[$i])] = $i;
-        }
-
-        $i = $m - 1; // Index for the end of the pattern
-        $j = $m - 1; // Index for the end of the text
-
-        while ($i < $n) {
-            if ($text[$j] == $pattern[$i]) {
-                // Match found
-                if ($i == 0) {
-                    return $j; // Return the position of the match
-                }
-                $i--;
-                $j--;
-            } else {
-                // No match, shift based on the last occurrence of the character in pattern
-                $i = $m - 1;
-                $j += $m - min($i, 1 + $last[ord($text[$j])]);
-            }
-        };
-
-        return -1; // No match found
-    }
-
-
-    // public function search(Request $request)
-    // {
-    //     $product = product::all();
-    //     $text = strtolower($product);
-
-    //     $pat = $request->query('search');
-    //     $pattern = strtolower($pat);
-
-    //     // $value = $this->SearchString($txt, $pattern);
-
-    //     if ($request->has('search')) {
-    //         $product = product::where('nama_product', 'LIKE', '%' . $pattern . '%')->get();
-    //         $value = $this->BooyerMore($text, $pattern);
-    //         dd($value);
-    //         // $product = $this->BooyerMore($teks, $request->search);
-    //     }
-    //     return view('product', ['product' => $product]);
-    // }
-
     public function search(Request $request)
     {
         if ($request->has('search') && $request->search !== '') {
+            //Mengmbil Data Inputan Dari searching dan mengubah data searching menjadi string
             $pattern = explode(' ', strtolower($request->search));
+            //Mengambil semua Data Produk Dari Database
             $allProducts = Product::all();
             $foundProducts = [];
 
@@ -137,6 +84,7 @@ class ProductShow extends Controller
                 $matches = false;
 
                 foreach ($pattern as $term) {
+                    //Penerapan Metode Boyer moore
                     $index = BooyerMoreProvider::search($productName, $term);
 
                     if ($index !== -1) {
@@ -152,6 +100,7 @@ class ProductShow extends Controller
 
             return view('product', ['product' => $foundProducts]);
         } else {
+            //Apabila Data tidak ditemukan maka akan mengembalikan data semua produk
             $products = Product::all();
             return view('product', ['product' => $products]);
         }
